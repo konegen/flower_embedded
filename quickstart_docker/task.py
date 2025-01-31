@@ -2,10 +2,9 @@
 
 import os
 
-import keras
+import tensorflow as tf
 from flwr_datasets import FederatedDataset
 from flwr_datasets.partitioner import IidPartitioner
-from keras import layers
 
 # Make TensorFlow log less verbose
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -13,16 +12,16 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 def load_model():
     # Define a simple CNN for CIFAR-10 and set Adam optimizer
-    model = keras.Sequential(
+    model = tf.keras.Sequential(
         [
-            keras.Input(shape=(32, 32, 3)),
-            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
-            layers.MaxPooling2D(pool_size=(2, 2)),
-            layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
-            layers.MaxPooling2D(pool_size=(2, 2)),
-            layers.Flatten(),
-            layers.Dropout(0.5),
-            layers.Dense(10, activation="softmax"),
+            tf.keras.Input(shape=(32, 32, 3)),
+            tf.keras.layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+            tf.keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(10, activation="softmax"),
         ]
     )
     model.compile("adam", "sparse_categorical_crossentropy", metrics=["accuracy"])
