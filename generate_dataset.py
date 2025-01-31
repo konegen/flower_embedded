@@ -1,47 +1,50 @@
-import argparse
-from flwr_datasets import FederatedDataset
-from flwr_datasets.partitioner import IidPartitioner
+import os
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
-DATASET_DIRECTORY = "datasets"
+def create_iris_partitions(dataset, num_partitions, output_dir, test_size=0.2):
+    # Erstellen des Hauptausgabeverzeichnisses
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Aufteilen des Datensatzes in gleiche Teile
+    partition_size = len(dataset) // num_partitions
+    partitions = [
+        dataset.iloc[i * partition_size : (i + 1) * partition_size]
+        for i in range(num_partitions)
+    ]
+
+    # Erstellen der Partitionen
+    for i, partition in enumerate(partitions):
+        part_dir = os.path.join(output_dir, f"iris_part_{i+1}")
+        os.makedirs(part_dir, exist_ok=True)
+
+        # Aufteilen in Trainings- und Testdaten
+        train_data, test_data = train_test_split(
+            partition, test_size=test_size, random_state=42
+        )
+
+        # Pfade erstellen
+        train_dir = os.path.join(part_dir, "train")
+        test_dir = os.path.join(part_dir, "test")
+        os.makedirs(train_dir, exist_ok=True)
+        os.makedirs(test_dir, exist_ok=True)
+
+        # Speichern als CSV
+        train_data.to_csv(os.path.join(train_dir, "data.csv"), index=False)
+        test_data.to_csv(os.path.join(test_dir, "data.csv"), index=False)
+
+    print(f"{num_partitions} partitions created successfully in {output_dir}.")
 
 
-def save_dataset_to_disk(num_partitions: int):
-    """This function downloads the Fashion-MNIST dataset and generates N partitions.
+# Laden des Iris-Datasets
+from sklearn.datasets import load_iris
 
-    Each will be saved into the DATASET_DIRECTORY.
-    """
-    partitioner = IidPartitioner(num_partitions=num_partitions)
-    fds = FederatedDataset(
-        dataset="zalando-datasets/fashion_mnist",
-        partitioners={"train": partitioner},
-    )
+iris = load_iris(as_frame=True)
+iris_data = pd.concat([iris.data, iris.target], axis=1)
 
-    for partition_id in range(num_partitions):
-        partition = fds.load_partition(partition_id)
-        partition_train_test = partition.train_test_split(test_size=0.2, seed=42)
-        file_path = f"./{DATASET_DIRECTORY}/fashionmnist_part_{partition_id + 1}"
-        partition_train_test.save_to_disk(file_path)
-        print(f"Written: {file_path}")
-
-
-if __name__ == "__main__":
-    # Initialize argument parser
-    parser = argparse.ArgumentParser(
-        description="Save Fashion-MNIST dataset partitions to disk"
-    )
-
-    # Add an optional positional argument for number of partitions
-    parser.add_argument(
-        "--num-supernodes",
-        type=int,
-        nargs="?",
-        default=2,
-        help="Number of partitions to create (default: 2)",
-    )
-
-    # Parse the arguments
-    args = parser.parse_args()
-
-    # Call the function with the provided argument
-    save_dataset_to_disk(args.num_supernodes)
+# Partitionierung erstellen
+output_directory = "datasets"
+num_partitions = 3  # Anzahl der Teile
+create_iris_partitions(iris_data, num_partitions, output_directory)
