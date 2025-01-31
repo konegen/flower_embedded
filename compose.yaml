@@ -25,7 +25,7 @@ services:
       - --superlink
       - superlink:9092
       - --node-config
-      - "partition-id=0 num-partitions=2"
+      - "dataset-path='datasets/iris_data_part_1/data.csv'"
       - --clientappio-api-address
       - 0.0.0.0:9094
       - --isolation
@@ -48,7 +48,7 @@ services:
       - --superlink
       - superlink:9092
       - --node-config
-      - "partition-id=1 num-partitions=2"
+      - "dataset-path='datasets/iris_data_part_2/data.csv'"
       - --clientappio-api-address
       - 0.0.0.0:9095
       - --isolation
@@ -81,6 +81,8 @@ services:
 
   clientapp-1:
     image: flwr_clientapp:0.0.1
+    volumes:
+      - /home/pi/datasets:/app/datasets
     command:                         
       - --insecure
       - --clientappio-api-address
@@ -96,6 +98,8 @@ services:
 
   clientapp-2:
     image: flwr_clientapp:0.0.1
+    volumes:
+      - /home/pi/datasets:/app/datasets
     command:                         
       - --insecure
       - --clientappio-api-address
