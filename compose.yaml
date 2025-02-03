@@ -65,7 +65,7 @@ services:
           - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
 
   serverapp:
-    image: flwr_serverapp:0.0.1        
+    image: harbor.dev-hs.de/hand/flwr_serverapp
     command:                         
       - --insecure
       - --serverappio-api-address
@@ -80,7 +80,7 @@ services:
           - node.hostname == manager-node  # Auf dem Manager-Node ausführen
 
   clientapp-1:
-    image: flwr_clientapp:0.0.1
+    image: harbor.dev-hs.de/hand/flwr_clientapp
     volumes:
       - /home/pi/datasets:/app/datasets
     command:                         
@@ -97,7 +97,7 @@ services:
           - node.hostname == worker-node-1  # Auf worker-node-1 ausführen
 
   clientapp-2:
-    image: flwr_clientapp:0.0.1
+    image: harbor.dev-hs.de/hand/flwr_clientapp
     volumes:
       - /home/pi/datasets:/app/datasets
     command:                         
