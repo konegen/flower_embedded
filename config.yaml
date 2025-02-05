@@ -1,0 +1,16 @@
+flwr_app_config:
+  use_case: "statistical" # "train"  #   Alternativ: "statistical"
+
+  parameters:
+    learning_rate: 0.001
+    batch_size: 4
+    epochs: 1
+    optimizer: "adam"
+
+  statistical_parameters:
+    - mean
+    - median
+    - std
+    - var
+    - min
+    - max
