@@ -7,8 +7,6 @@ import numpy as np
 from flwr.client import ClientApp
 from flwr.common import Context, Message, MetricsRecord, RecordSet
 from flwr.common.logger import log
-from flwr_datasets import FederatedDataset
-from flwr_datasets.partitioner import IidPartitioner
 
 from utils import load_config
 
@@ -74,6 +72,8 @@ elif config["use_case"].lower() == "train":
 
         def fit(self, parameters, config):
             self.model.set_weights(parameters)
+            log(INFO, f"self.epochs: {self.epochs}")
+            log(INFO, f"self.batch_size: {self.batch_size}")
             self.model.fit(
                 self.x_train,
                 self.y_train,

@@ -1,5 +1,5 @@
 flwr_app_config:
-  use_case: "statistical" # "train"  #   Alternativ: "statistical"
+  use_case: "train"  # "statistical" #
 
   parameters:
     learning_rate: 0.001
