@@ -29,7 +29,7 @@ clientapp = "quickstart_multifunction.client_app:app"
 
 [tool.flwr.app.config]
 use-case = "train" # "statistic" # 
-num-server-rounds = 10
+num-server-rounds = 5
 fraction-sample = 1.0
 
 [tool.flwr.federations]

@@ -1,5 +1,3 @@
-"""quickstart-docker: A Flower / TensorFlow app."""
-
 import os
 
 import numpy as np
