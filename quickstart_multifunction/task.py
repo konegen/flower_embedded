@@ -22,7 +22,7 @@ def load_model():
         ]
     )
     model.compile(
-        tf.optimizers.Adam(learning_rate=0.0005),
+        tf.optimizers.Adam(learning_rate=0.002),
         "sparse_categorical_crossentropy",
         metrics=["accuracy"],
     )
@@ -49,13 +49,14 @@ def load_data(partition_id, num_partitions, use_case):
     x_train = df_train.drop(columns=["Id", "Species"])
     x_test = df_test.drop(columns=["Id", "Species"])
 
-    if use_case == "train":
+    if use_case == "statistic":
+        y_train, y_test = df_train["Species"], df_test["Species"]
+
+    elif use_case == "train":
         x_train, x_test = x_train.to_numpy(dtype=np.float32), x_test.to_numpy(
             dtype=np.float32
         )
         _, y_train = np.unique(df_train["Species"], return_inverse=True)
         _, y_test = np.unique(df_test["Species"], return_inverse=True)
-    elif use_case == "statistical":
-        y_train, y_test = df_train["Species"], df_test["Species"]
 
     return x_train, y_train, x_test, y_test

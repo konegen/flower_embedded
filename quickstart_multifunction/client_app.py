@@ -1,5 +1,4 @@
-"""pandas_example: A Flower / Pandas app."""
-
+import json
 import warnings
 from logging import INFO, WARNING
 
@@ -8,104 +7,96 @@ from flwr.client import ClientApp
 from flwr.common import Context, Message, MetricsRecord, RecordSet
 from flwr.common.logger import log
 
-from utils import load_config
-
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-from flwr.client import ClientApp, NumPyClient
+from flwr.client import NumPyClient
 from flwr.common import Context
 
 from quickstart_multifunction.task import load_data, load_model
 
-config = load_config()
 
-if config["use_case"].lower() == "statistical":
-    app = ClientApp()
+class FlowerClientStatistic(NumPyClient):
+    def __init__(self, data):
+        self.x_train, self.y_train, self.x_test, self.y_test = data
 
-    @app.query()
-    def query(msg: Message, context: Context):
-        """Construct histogram of local dataset and report to `ServerApp`."""
-
-        log(INFO, f"ClientApp function QUERY was called")
-
-        log(INFO, f"Context: {context}")
-
-        config = load_config()
-        log(INFO, f"config: {config}")
-
-        # Read the node_config to fetch data partition associated to this node
-        partition_id = context.node_config["partition-id"]
-        num_partitions = context.node_config["num-partitions"]
-
-        x_train, _, _, _ = load_data(partition_id, num_partitions, "statistical")
-
+    def evaluate(self, parameters, config):
         metrics = {}
+
         # Compute some statistics for each column in the dataframe
-        for feature_name in x_train.columns:
-            for metric in config["statistical_parameters"]:
-                if hasattr(x_train[feature_name], metric):
+        for feature_name in self.x_train.columns:
+            for metric in json.loads(config["metrics"]):
+                if hasattr(self.x_train[feature_name], metric):
                     # Falls die Metrik existiert, berechnen
                     metrics[f"{feature_name}_{metric}"] = getattr(
-                        x_train[feature_name], metric
+                        self.x_train[feature_name], metric
                     )()
                 else:
                     # Falls die Metrik nicht existiert, Warnung ausgeben und None setzen
                     log(WARNING, f"Metric '{metric}' is not known")
                     metrics[f"{feature_name}_{metric}"] = None
+        return float(0.0), len(self.x_train), metrics
 
-        reply_content = RecordSet(
-            metrics_records={"query_results": MetricsRecord(metrics)}
+
+class FlowerClientTrain(NumPyClient):
+    def __init__(self, model, data):
+        self.model = model
+        self.x_train, self.y_train, self.x_test, self.y_test = data
+
+    def fit(self, parameters, config):
+        self.model.set_weights(parameters)
+        log(INFO, f'config["local_epochs"]: {config["local_epochs"]}')
+        log(INFO, f'config["batch_size"]: {config["batch_size"]}')
+        self.model.fit(
+            self.x_train,
+            self.y_train,
+            epochs=config["local_epochs"],
+            batch_size=config["batch_size"],
+            verbose=config["verbose"],
         )
+        return self.model.get_weights(), len(self.x_train), {}
 
-        return msg.create_reply(reply_content)
+    def evaluate(self, parameters, config):
+        self.model.set_weights(parameters)
+        loss, accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=0)
+        return loss, len(self.x_test), {"accuracy": accuracy}
 
-elif config["use_case"].lower() == "train":
-    # Define Flower Client and client_fn
-    class FlowerClient(NumPyClient):
-        def __init__(self, model, data, epochs, batch_size, verbose):
-            self.model = model
-            self.x_train, self.y_train, self.x_test, self.y_test = data
-            self.epochs = epochs
-            self.batch_size = batch_size
-            self.verbose = verbose
 
-        def fit(self, parameters, config):
-            self.model.set_weights(parameters)
-            log(INFO, f"self.epochs: {self.epochs}")
-            log(INFO, f"self.batch_size: {self.batch_size}")
-            self.model.fit(
-                self.x_train,
-                self.y_train,
-                epochs=self.epochs,
-                batch_size=self.batch_size,
-                verbose=self.verbose,
-            )
-            return self.model.get_weights(), len(self.x_train), {}
+def client_fn(context: Context):
 
-        def evaluate(self, parameters, config):
-            self.model.set_weights(parameters)
-            loss, accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=0)
-            return loss, len(self.x_test), {"accuracy": accuracy}
+    # log(INFO, f"context: {context}")
 
-    def client_fn(context: Context):
+    if context.run_config["use-case"] == "statistic":
+        partition_id = context.node_config["partition-id"]
+        num_partitions = context.node_config["num-partitions"]
+        data = load_data(partition_id, num_partitions, "statistic")
+        verbose = context.run_config.get("verbose")
+
+        log(INFO, f"Num train data: {len(data[0])}")
+        log(INFO, f"Num test data: {len(data[2])}")
+
+        log(INFO, f"Start Flower Client Statistic")
+
+        # Return Client instance
+        return FlowerClientStatistic(data).to_client()
+
+    elif context.run_config["use-case"] == "train":
         # Load model and data
         net = load_model()
 
         partition_id = context.node_config["partition-id"]
         num_partitions = context.node_config["num-partitions"]
         data = load_data(partition_id, num_partitions, "train")
+
         log(INFO, f"Num train data: {len(data[0])}")
         log(INFO, f"Num test data: {len(data[2])}")
-        epochs = context.run_config["local-epochs"]
-        batch_size = context.run_config["batch-size"]
-        verbose = context.run_config.get("verbose")
 
-        log(INFO, f"Start Flower Client")
-
+        log(INFO, f"Start Flower Client Train")
         # Return Client instance
-        return FlowerClient(net, data, epochs, batch_size, verbose).to_client()
+        return FlowerClientTrain(net, data).to_client()
 
-    app = ClientApp(client_fn=client_fn)
-else:
-    raise ValueError(f"Unknown fl_use_case: {config['use_case']}")
+    else:
+        raise ValueError(f'Unknown Flower use case: {context.run_config["use-case"]}')
+
+
+app = ClientApp(client_fn=client_fn)
