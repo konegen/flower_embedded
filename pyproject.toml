@@ -3,19 +3,19 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pandas_example"
+name = "quickstart_multifunction"
 version = "1.0.0"
-description = "Federated Learning with Pandas and Flower (Quickstart Example)"
+description = "Federated Learning with flower with multifunction local in docker"
 license = "Apache-2.0"
-authors = [
-    { name = "The Flower Authors", email = "hello@flower.ai" },
-    { name = "Ragy Haddad", email = "ragy202@gmail.com" },
-]
+authors = [ "Daniel Konegen <Daniel.Konegen@hahn-schickard.de>" ]
 dependencies = [
     "flwr[simulation]>=1.14.0",
-    "numpy==2.2.2",
+    "flwr-datasets[vision]>=0.3.0",
+    "numpy<2",  # Downgrade NumPy to 1.x
     "pandas==2.2.3",
+    "tensorflow>=2.11.1,<2.18.0",
 ]
+
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
@@ -24,11 +24,12 @@ packages = ["."]
 publisher = "flwrlabs"
 
 [tool.flwr.app.components]
-serverapp = "pandas_example.server_app:app"
-clientapp = "pandas_example.client_app:app"
+serverapp = "quickstart_multifunction.server_app:app"
+clientapp = "quickstart_multifunction.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 1
+use-case = "train" # "statistic" # 
+num-server-rounds = 10
 fraction-sample = 1.0
 
 [tool.flwr.federations]

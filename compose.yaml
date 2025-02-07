@@ -3,6 +3,7 @@ version: '3.8'
 services:
   superlink:
     image: flwr/superlink:1.14.0
+    container_name: superlink
     command:
       - --insecure
       - --isolation
@@ -12,20 +13,17 @@ services:
       - 9092:9092
       - 9093:9093
     networks:
-      - flwr-overlay-network
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == manager-node  # Auf dem Manager-Node ausführen
-
+      - flwr-network
+  
   supernode-1:
     image: flwr/supernode:1.14.0
+    container_name: supernode-1
     command:
       - --insecure
       - --superlink
       - superlink:9092
       - --node-config
-      - "dataset-path='datasets/iris_data_part_1/data.csv'"
+      - "partition-id=0 num-partitions=2"
       - --clientappio-api-address
       - 0.0.0.0:9094
       - --isolation
@@ -33,22 +31,19 @@ services:
     ports:
       - 9094:9094
     networks:
-      - flwr-overlay-network
+      - flwr-network
     depends_on:
       - superlink
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == worker-node-1  # Auf worker-node-1 ausführen
-
+  
   supernode-2:
     image: flwr/supernode:1.14.0
+    container_name: supernode-2
     command:
       - --insecure
       - --superlink
       - superlink:9092
       - --node-config
-      - "dataset-path='datasets/iris_data_part_2/data.csv'"
+      - "partition-id=1 num-partitions=2"
       - --clientappio-api-address
       - 0.0.0.0:9095
       - --isolation
@@ -56,63 +51,55 @@ services:
     ports:
       - 9095:9095
     networks:
-      - flwr-overlay-network
+      - flwr-network
     depends_on:
       - superlink
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
 
   serverapp:
-    image: flwr_serverapp:0.0.1        
+    build:                           
+      context: .                     
+      dockerfile: serverapp.Dockerfile
+    image: multi_serverapp:0.0.1      
+    container_name: serverapp            
     command:                         
       - --insecure
       - --serverappio-api-address
       - superlink:9091
     networks:
-      - flwr-overlay-network
+      - flwr-network
     depends_on:
       - superlink
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == manager-node  # Auf dem Manager-Node ausführen
-
+  
   clientapp-1:
-    image: flwr_clientapp:0.0.1
-    volumes:
-      - /home/pi/datasets:/app/datasets
+    build:                           
+      context: .                     
+      dockerfile: clientapp.Dockerfile
+    image: multi_clientapp:0.0.1      
+    container_name: clientapp-1
     command:                         
       - --insecure
       - --clientappio-api-address
       - supernode-1:9094
     networks:
-      - flwr-overlay-network
+      - flwr-network
     depends_on:
       - supernode-1
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == worker-node-1  # Auf worker-node-1 ausführen
-
+  
   clientapp-2:
-    image: flwr_clientapp:0.0.1
-    volumes:
-      - /home/pi/datasets:/app/datasets
+    build:                           
+      context: .                     
+      dockerfile: clientapp.Dockerfile
+    image: multi_clientapp:0.0.1      
+    container_name: clientapp-2
     command:                         
       - --insecure
       - --clientappio-api-address
       - supernode-2:9095
     networks:
-      - flwr-overlay-network
+      - flwr-network
     depends_on:
       - supernode-2
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
 
 networks:
-  flwr-overlay-network:
-    driver: overlay
+  flwr-network:
+    driver: bridge
