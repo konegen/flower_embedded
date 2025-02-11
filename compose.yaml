@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   superlink:
     image: flwr/superlink:1.14.0
