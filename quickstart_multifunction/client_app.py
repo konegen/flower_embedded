@@ -17,7 +17,9 @@ def client_fn(context: Context):
 
     if context.run_config["use-case"] == "statistic":
 
-        data = get_clientapp_dataset(context.node_config["dataset-path"])
+        data = get_clientapp_dataset(
+            context.node_config["dataset-path"], context.run_config["use-case"]
+        )
 
         log(INFO, f"Num train data: {len(data[0])}")
         log(INFO, f"Num test data: {len(data[2])}")
@@ -31,7 +33,9 @@ def client_fn(context: Context):
         # Load model and data
         net = load_model()
 
-        data = get_clientapp_dataset(context.node_config["dataset-path"])
+        data = get_clientapp_dataset(
+            context.node_config["dataset-path"], context.run_config["use-case"]
+        )
 
         log(INFO, f"Num train data: {len(data[0])}")
         log(INFO, f"Num test data: {len(data[2])}")
