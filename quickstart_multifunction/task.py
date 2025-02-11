@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from flwr_datasets import FederatedDataset
 from flwr_datasets.partitioner import IidPartitioner
@@ -25,6 +26,12 @@ def load_model():
         metrics=["accuracy"],
     )
     return model
+
+
+def get_clientapp_dataset(path: str):
+
+    data = pd.read_csv(path)
+    return data
 
 
 fds = None  # Cache FederatedDataset
