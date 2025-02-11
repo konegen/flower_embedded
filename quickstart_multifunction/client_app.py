@@ -1,15 +1,21 @@
 import warnings
 from logging import INFO
 
+import pandas as pd
 from flwr.client import ClientApp
-from flwr.common.logger import log
 from flwr.common import Context
+from flwr.common.logger import log
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
+from client import FlowerClientStatistic, FlowerClientTrain
 from task import load_data, load_model
 
-from client import FlowerClientStatistic, FlowerClientTrain
+
+def get_clientapp_dataset(path: str):
+
+    data = pd.read_csv(path)
+    return data
 
 
 def client_fn(context: Context):
@@ -19,8 +25,8 @@ def client_fn(context: Context):
     if context.run_config["use-case"] == "statistic":
         partition_id = context.node_config["partition-id"]
         num_partitions = context.node_config["num-partitions"]
-        data = load_data(partition_id, num_partitions, "statistic")
-        verbose = context.run_config.get("verbose")
+
+        data = get_clientapp_dataset(context.node_config["dataset-path"])
 
         log(INFO, f"Num train data: {len(data[0])}")
         log(INFO, f"Num test data: {len(data[2])}")
