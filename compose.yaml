@@ -102,6 +102,8 @@ services:
 
   clientapp-1:
     image: harbor.dev-hs.de/hand/flwr_clientapp_multifunction
+    volumes:
+      - /home/pi/datasets:/app/datasets
     command:                         
       - --insecure
       - --clientappio-api-address
@@ -117,6 +119,8 @@ services:
 
   clientapp-2:
     image: harbor.dev-hs.de/hand/flwr_clientapp_multifunction
+    volumes:
+      - /home/pi/datasets:/app/datasets
     command:                         
       - --insecure
       - --clientappio-api-address
