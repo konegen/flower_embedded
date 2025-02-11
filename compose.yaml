@@ -86,7 +86,7 @@ services:
   #         - node.hostname == worker-node-3  # Auf worker-node-3 ausführen
 
   serverapp:
-    image: harbor.dev-hs.de/hand/flwr_serverapp
+    image: harbor.dev-hs.de/hand/flwr_serverapp_multifunction
     command:                         
       - --insecure
       - --serverappio-api-address
@@ -101,7 +101,7 @@ services:
           - node.hostname == manager-node  # Auf dem Manager-Node ausführen
 
   clientapp-1:
-    image: harbor.dev-hs.de/hand/flwr_clientapp
+    image: harbor.dev-hs.de/hand/flwr_clientapp_multifunction
     command:                         
       - --insecure
       - --clientappio-api-address
@@ -116,7 +116,7 @@ services:
           - node.hostname == worker-node-1  # Auf worker-node-1 ausführen
 
   clientapp-2:
-    image: harbor.dev-hs.de/hand/flwr_clientapp
+    image: harbor.dev-hs.de/hand/flwr_clientapp_multifunction
     command:                         
       - --insecure
       - --clientappio-api-address
@@ -131,7 +131,7 @@ services:
           - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
 
   # clientapp-3:
-  #   image: harbor.dev-hs.de/hand/flwr_clientapp
+  #   image: harbor.dev-hs.de/hand/flwr_clientapp_multifunction
   #   command:                         
   #     - --insecure
   #     - --clientappio-api-address

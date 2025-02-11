@@ -98,13 +98,13 @@ Es sollte sichergestellt werden, dass die entsprechenden `Dockerfile`Dateien fü
     **Für die Client-App:**
     
     ```bash
-    docker build -t flwr_clientapp -f clientapp.Dockerfile .
+    docker build -t flwr_clientapp_multifunction -f clientapp.Dockerfile .
     ```
     
     **Für die Server-App:**
     
     ```bash
-    docker build -t flwr_serverapp -f serverapp.Dockerfile .
+    docker build -t flwr_serverapp_multifunction -f serverapp.Dockerfile .
     ```
     
 3. **Verfügbarkeit überprüfen:**
@@ -126,13 +126,13 @@ Alternativ können die Docker Images zentral auf dem Manager-Node oder einer ded
     **Für die Client-App:**
     
     ```bash
-    docker build -t harbor.dev-hs.de/${project}/flwr_clientapp -f clientapp.Dockerfile .
+    docker build -t harbor.dev-hs.de/${project}/flwr_clientapp_multifunction -f clientapp.Dockerfile .
     ```
     
     **Für die Server-App:**
     
     ```bash
-    docker build -t harbor.dev-hs.de/${project}/flwr_serverapp -f serverapp.Dockerfile .
+    docker build -t harbor.dev-hs.de/${project}/flwr_serverapp_multifunction -f serverapp.Dockerfile .
     ```
     
 2. **Bei der Registry anmelden:**
@@ -150,13 +150,13 @@ Nach dem Build-Prozess werden die Images in die Registry hochgeladen:
     **Für die Client-App:**
     
     ```bash
-    docker push harbor.dev-hs.de/${project}/flwr_clientapp
+    docker push harbor.dev-hs.de/${project}/flwr_clientapp_multifunction
     ```
     
     **Für die Server-App:**
     
     ```bash
-    docker push harbor.dev-hs.de/${project}/flwr_serverapp
+    docker push harbor.dev-hs.de/${project}/flwr_serverapp_multifunction
     ```
     
 4. **Images aus der Registry pullen:**
@@ -165,7 +165,7 @@ Wenn die Docker Images in der Registry liegen, können diese auf den entsprechen
     **Für die Client-App:**
     
     ```bash
-    docker pull harbor.dev-hs.de/${project}/flwr_clientapp
+    docker pull harbor.dev-hs.de/${project}/flwr_clientapp_multifunction
     ```
     
     **Für die Server-App:**
@@ -188,13 +188,13 @@ Wenn die Docker Images in der Registry liegen, können diese auf den entsprechen
     **Für arm64 oder armhf:**
     
     ```bash
-    docker buildx build --platform linux/arm64 -t harbor.dev-hs.de/hand/flwr_serverapp:latest --push .
+    docker buildx build --platform linux/arm64 -t harbor.dev-hs.de/hand/flwr_clientapp_multifunction:latest --push .
     ```
     
     **Für x86_64 (amd64):**
     
     ```bash
-    docker buildx build --platform linux/amd64 -t harbor.dev-hs.de/hand/flwr_serverapp:latest --push .
+    docker buildx build --platform linux/amd64 -t harbor.dev-hs.de/hand/flwr_serverapp_multifunction:latest --push .
     ```
     
     💡 Beachte: Du musst das Image pushen, da Buildx es nicht lokal speichert.
