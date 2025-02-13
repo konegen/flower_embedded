@@ -14,12 +14,12 @@ To build and start the Flower containers run:
 docker compose up -d
 ```
 
-## Run with the Simulation Engine
+## Run the Flowre project in the Docker container 
 
-Use `flwr run` to run a local simulation:
+Use `flwr run` to run a local deployment:
 
 ```bash
-flwr run .
+flwr run . local-deployment --stream
 ```
 
 ## Stop and Remove Docker Containers
