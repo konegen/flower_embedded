@@ -1,4 +1,4 @@
-# quickstart-docker: A Flower / TensorFlow app
+# Run Flower in Docker container local
 
 ## Install dependencies and project
 
@@ -6,26 +6,26 @@
 pip install -e .
 ```
 
+## Build and Run Docker Containers
+
+To build and start the Flower containers run:
+
+```bash
+docker compose up -d
+```
+
 ## Run with the Simulation Engine
 
-In the `quickstart-docker` directory, use `flwr run` to run a local simulation:
+Use `flwr run` to run a local simulation:
 
 ```bash
 flwr run .
 ```
 
-Refer to the [How to Run Simulations](https://flower.ai/docs/framework/how-to-run-simulations.html) guide in the documentation for advice on how to optimize your simulations.
+## Stop and Remove Docker Containers
 
-## Run with the Deployment Engine
+To stop and remove the running Flower containers, use:
 
-> \[!NOTE\]
-> An update to this example will show how to run this Flower application with the Deployment Engine and TLS certificates, or with Docker.
-
-## Resources
-
-- Flower website: [flower.ai](https://flower.ai/)
-- Check the documentation: [flower.ai/docs](https://flower.ai/docs/)
-- Give Flower a ⭐️ on GitHub: [GitHub](https://github.com/adap/flower)
-- Join the Flower community!
-  - [Flower Slack](https://flower.ai/join-slack/)
-  - [Flower Discuss](https://discuss.flower.ai/)
+```bash
+docker compose down
+```
