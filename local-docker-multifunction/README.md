@@ -11,6 +11,7 @@ pip install -e .
 To build and start the Flower containers run:
 
 ```bash
+docker compose build --no-cache
 docker compose up -d
 ```
 
