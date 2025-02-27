@@ -3,18 +3,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "docker-sklearn"
+name = "multifunction_analysisbackend"
 version = "1.0.0"
-description = ""
+description = "Federated Learning with flower with multifunction local in docker"
 license = "Apache-2.0"
-authors = [
-  {name = "Daniel Konegen", email = "Daniel.Konegen@hahn-schickard.de"},
-]
 dependencies = [
-    "flwr[simulation]>=1.13.1",
+    "flwr[simulation]>=1.14.0",
     "flwr-datasets[vision]>=0.3.0",
-    "scikit-learn==1.6.1",
+    "numpy<2",  # Downgrade NumPy to 1.x
+    "pandas==2.2.3",
+    "tensorflow>=2.11.1,<2.18.0",
 ]
+
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
@@ -23,18 +23,20 @@ packages = ["."]
 publisher = "flwrlabs"
 
 [tool.flwr.app.components]
-serverapp = "docker_sklearn.server_app:app"
-clientapp = "docker_sklearn.client_app:app"
+serverapp = "src.flower_multifunction.server_app:app"
+clientapp = "src.flower_multifunction.client_app:app"
 
 [tool.flwr.app.config]
-penalty = "l2"
-num-server-rounds = 3
+use-case = "train" # "statistic" # 
+num-server-rounds = 2
+fraction-sample = 1.0
+config-file = "config.yaml"
 
 [tool.flwr.federations]
 default = "local-simulation"
 
 [tool.flwr.federations.local-simulation]
-options.num-supernodes = 10
+options.num-supernodes = 3
 
 [tool.flwr.federations.local-deployment]
 address = "127.0.0.1:9093"

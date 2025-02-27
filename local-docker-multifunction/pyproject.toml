@@ -7,7 +7,9 @@ name = "quickstart_multifunction"
 version = "1.0.0"
 description = "Federated Learning with flower with multifunction local in docker"
 license = "Apache-2.0"
-authors = [ "Daniel Konegen <Daniel.Konegen@hahn-schickard.de>" ]
+authors = [
+  {name = "Daniel Konegen", email = "Daniel.Konegen@hahn-schickard.de"},
+]
 dependencies = [
     "flwr[simulation]>=1.14.0",
     "flwr-datasets[vision]>=0.3.0",

@@ -8,8 +8,7 @@ version = "1.0.0"
 description = "Federated Learning with Pandas and Flower (Quickstart Example)"
 license = "Apache-2.0"
 authors = [
-    { name = "The Flower Authors", email = "hello@flower.ai" },
-    { name = "Ragy Haddad", email = "ragy202@gmail.com" },
+  {name = "Daniel Konegen", email = "Daniel.Konegen@hahn-schickard.de"},
 ]
 dependencies = [
     "flwr[simulation]>=1.14.0",

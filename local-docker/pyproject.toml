@@ -7,6 +7,9 @@ name = "quickstart-docker"
 version = "1.0.0"
 description = ""
 license = "Apache-2.0"
+authors = [
+  {name = "Daniel Konegen", email = "Daniel.Konegen@hahn-schickard.de"},
+]
 dependencies = [
     "flwr[simulation]>=1.13.1",
     "flwr-datasets[vision]>=0.3.0",
@@ -17,7 +20,7 @@ dependencies = [
 packages = ["."]
 
 [tool.flwr.app]
-publisher = "dk100"
+publisher = "flwrlabs"
 
 [tool.flwr.app.components]
 serverapp = "quickstart_docker.server_app:app"
