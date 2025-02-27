@@ -1,0 +1,118 @@
+services:
+  superlink:
+    image: flwr/superlink:1.14.0
+    command:
+      - --insecure
+      - --isolation
+      - process
+    ports:
+      - 9091:9091
+      - 9092:9092
+      - 9093:9093
+    networks:
+      - flwr-overlay-network
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == manager-node  # Auf dem Manager-Node ausführen
+
+  supernode-1:
+    image: flwr/supernode:1.14.0
+    command:
+      - --insecure
+      - --superlink
+      - superlink:9092
+      - --node-config
+      - "dataset-path='datasets/iris_data_part_1/data.csv'"
+      - --clientappio-api-address
+      - 0.0.0.0:9094
+      - --isolation
+      - process
+    ports:
+      - 9094:9094
+    networks:
+      - flwr-overlay-network
+    depends_on:
+      - superlink
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == worker-node-1  # Auf worker-node-1 ausführen
+
+  supernode-2:
+    image: flwr/supernode:1.14.0
+    command:
+      - --insecure
+      - --superlink
+      - superlink:9092
+      - --node-config
+      - "dataset-path='datasets/iris_data_part_2/data.csv'"
+      - --clientappio-api-address
+      - 0.0.0.0:9095
+      - --isolation
+      - process
+    ports:
+      - 9095:9095
+    networks:
+      - flwr-overlay-network
+    depends_on:
+      - superlink
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
+
+  serverapp:
+    image: harbor.dev-hs.de/hand/flwr_serverapp_analysis_config
+    volumes:
+      - ./config:/app/config
+    command:
+      - --insecure
+      - --serverappio-api-address
+      - superlink:9091
+    networks:
+      - flwr-overlay-network
+    depends_on:
+      - superlink
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == manager-node  # Auf dem Manager-Node ausführen
+  
+  clientapp-1:
+    image: harbor.dev-hs.de/hand/flwr_clientapp_analysis_config
+    volumes:
+      - /home/pi/datasets:/app/datasets
+    command:                         
+      - --insecure
+      - --clientappio-api-address
+      - supernode-1:9094
+    networks:
+      - flwr-overlay-network
+    depends_on:
+      - supernode-1
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == worker-node-1  # Auf worker-node-1 ausführen
+  
+  clientapp-2:
+    image: harbor.dev-hs.de/hand/flwr_clientapp_analysis_config
+    volumes:
+      - /home/pi/datasets:/app/datasets
+    command:                         
+      - --insecure
+      - --clientappio-api-address
+      - supernode-2:9095
+    networks:
+      - flwr-overlay-network
+    depends_on:
+      - supernode-2
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
+
+networks:
+  flwr-overlay-network:
+    driver: overlay

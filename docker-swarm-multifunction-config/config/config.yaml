@@ -1,0 +1,86 @@
+data_info:
+  encoding: integer
+  target_column: target
+
+train:
+  split_strategie:
+    name: train_test_split
+    parameters:
+      test_size: 0.2
+      shuffle: true
+  
+  model:
+    type: mlp
+    parameters:
+      layers:
+        - type: Input
+          shape: [4]
+        - type: Dense
+          units: 10
+          activation: relu
+        - type: Dense
+          units: 10
+          activation: relu
+        - type: Dense
+          units: 3
+          activation: softmax
+      compiler:
+        optimizer:
+          class_name: Adam
+          config:
+            learning_rate: 0.001
+        loss: sparse_categorical_crossentropy
+        metrics:
+          - accuracy
+
+  training:
+    epochs: 2
+    batch_size: 2
+    validation_split: 0.2
+    verbose: 0
+
+statistic:
+  mean:
+    dataframe_parameters:
+      columns: all
+    statistic_parameters:
+      axis: 0
+
+  median:
+    dataframe_parameters:
+      columns: all
+    statistic_parameters:
+      axis: 0
+
+  std:
+    dataframe_parameters:
+      columns: all
+    statistic_parameters:
+      axis: 0
+
+  var:
+    dataframe_parameters:
+      columns: all
+    statistic_parameters:
+      axis: 0
+
+  min:
+    dataframe_parameters:
+      columns: all
+    statistic_parameters:
+      axis: 0
+
+  max:
+    dataframe_parameters:
+      columns: all
+    statistic_parameters:
+      axis: 0
+
+  spearmanr:
+    dataframe_parameters:
+      columns: all
+      second_columns:
+        - SepalLengthCm
+        - SepalWidthCm
+    statistic_parameters:
+      axis: 0

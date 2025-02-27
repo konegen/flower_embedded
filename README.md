@@ -20,7 +20,10 @@ Statistical analysis of data using Flower on multiple nodes within a Docker Swar
 Run flower locally for two use cases in docker containers.
 
 ### 6. docker-swarm-multifunction
-Run flower for two use cases in docker containers on a Docker Swarm cluster.
+Run flower for two use cases in docker containers within a Docker Swarm cluster.
 
 ### 7. local-docker-multifunction-config
 Run flower for two use cases locally and define parameters in `config.yaml`
+
+### 8. docker-swarm-multifunction-config
+Run flower for two use cases in docker containers within a Docker Swarm cluster and define parameters in `config.yaml`
