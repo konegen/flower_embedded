@@ -17,7 +17,7 @@ def create_iris_partitions(dataset, num_partitions, output_dir, test_size=0.2):
 
     # Erstellen der Partitionen
     for i, partition in enumerate(partitions):
-        part_dir = os.path.join(output_dir, f"iris_part_{i+1}")
+        part_dir = os.path.join(output_dir, f"iris_data_part_{i+1}")
         os.makedirs(part_dir, exist_ok=True)
 
         # Aufteilen in Trainings- und Testdaten
@@ -43,6 +43,7 @@ from sklearn.datasets import load_iris
 
 iris = load_iris(as_frame=True)
 iris_data = pd.concat([iris.data, iris.target], axis=1)
+iris_data = iris_data.sample(frac=1).reset_index(drop=True)
 
 # Partitionierung erstellen
 output_directory = "datasets"

@@ -25,6 +25,7 @@ def client_fn(context: Context):
 
         statistic_backend = StatisticBackend(log_logger_to_console=True)
 
+        print("\n\n")
         log(INFO, f"Start Flower Client Statistic")
 
         # Return Client instance
@@ -34,6 +35,7 @@ def client_fn(context: Context):
 
         deep_learning_backend = DeepLearningBackend()
 
+        print("\n\n")
         log(INFO, f"Start Flower Client Train")
         # Return Client instance
         return FlowerClientTrain(deep_learning_backend, data).to_client()

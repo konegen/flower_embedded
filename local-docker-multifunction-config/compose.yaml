@@ -68,7 +68,7 @@ services:
     depends_on:
       - superlink
     volumes:
-      - ./config.yaml:/app/config.yaml
+      - ./config/config.yaml:/app/config/config.yaml
   
   clientapp-1:
     build:                           

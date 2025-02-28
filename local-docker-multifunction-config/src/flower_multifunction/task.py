@@ -10,7 +10,7 @@ from flwr_datasets.partitioner import IidPartitioner
 
 
 def load_config() -> dict:
-    with open(os.path.join(os.getcwd(), "config.yaml"), "r") as file:
+    with open(os.path.join(os.getcwd(), "config", "config.yaml"), "r") as file:
         return yaml.safe_load(file)
 
 
@@ -20,7 +20,7 @@ def fit_config(server_round: int) -> dict:
 
     analysis_config = {"config_json": json.dumps(load_config())}
 
-    # analysis_config["current_round"] = server_round
+    analysis_config["current_round"] = server_round
 
     return analysis_config
 
@@ -29,6 +29,8 @@ def evaluate_config(server_round: int) -> dict:
     """Generate evaluation configuration for each round."""
 
     analysis_config = {"config_json": json.dumps(load_config())}
+
+    analysis_config["current_round"] = server_round
 
     return analysis_config
 

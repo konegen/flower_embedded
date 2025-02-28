@@ -80,7 +80,7 @@ statistic:
     dataframe_parameters:
       columns: all
       second_columns:
-        - SepalLengthCm
-        - SepalWidthCm
+        - sepal length (cm)
+        - sepal width (cm)
     statistic_parameters:
       axis: 0

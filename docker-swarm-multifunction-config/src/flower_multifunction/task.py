@@ -27,6 +27,8 @@ def evaluate_config(server_round: int) -> dict:
 
     analysis_config = {"config_json": json.dumps(load_config())}
 
+    analysis_config["current_round"] = server_round
+
     return analysis_config
 
 
