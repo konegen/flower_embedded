@@ -1,0 +1,6 @@
+.flwr
+.vscode
+datasets
+**/__pycache__/
+dependencies
+temp

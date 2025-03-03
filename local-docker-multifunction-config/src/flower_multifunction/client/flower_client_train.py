@@ -2,22 +2,29 @@ import json
 import os
 import pickle
 from logging import INFO
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
+import numpy as np
 import pandas as pd
 from analysis_backend.deep_learning_backend.deep_learning_backend import (
     DeepLearningBackend,
 )
+from analysis_backend.machine_learning_backend.machine_learning_backend import (
+    MachineLearningBackend,
+)
 from flwr.client import NumPyClient
 from flwr.common import Parameters
 from flwr.common.logger import log
+from task import set_model_parameters
 
 
 class FlowerClientTrain(NumPyClient):
     def __init__(
-        self, deep_learning_backend: DeepLearningBackend, data: pd.DataFrame
+        self,
+        analysis_backend: Union[DeepLearningBackend, MachineLearningBackend],
+        data: pd.DataFrame,
     ) -> None:
-        self.deep_learning_backend = deep_learning_backend
+        self.analysis_backend = analysis_backend
         self.data = data
 
         self.temp_dir = os.path.join(os.getcwd(), "temp")
@@ -29,44 +36,43 @@ class FlowerClientTrain(NumPyClient):
         self, analysis_config: dict
     ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
 
-        data = self.deep_learning_backend.label_encoding(
+        indexes = self.analysis_backend.get_split_indexes(
             self.data,
-            analysis_config["data_info"]["target_column"],
-            encoding=analysis_config["data_info"]["encoding"],
-        )
-
-        indexes = self.deep_learning_backend.get_split_indexes(
-            data,
             analysis_config["data_info"]["target_column"],
             split_strategy=analysis_config["train"]["split_strategie"]["name"],
             split_parameter=analysis_config["train"]["split_strategie"]["parameters"],
         )
 
+        data, label_col = self.analysis_backend.label_encoding(
+            self.data,
+            analysis_config["data_info"]["target_column"],
+            encoding=analysis_config["data_info"]["encoding"],
+        )
+
         data_train = data.iloc[indexes[0]["train"]]
         # Extract features and targets from train and test sets
-        X_train = data_train.drop(
-            columns=[analysis_config["data_info"]["target_column"]]
-        )
-        y_train = data_train[analysis_config["data_info"]["target_column"]]
+        X_train = data_train.drop(columns=label_col)
+        y_train = data_train[label_col]
 
         data_test = data.iloc[indexes[0]["test"]]
         # Extract features and targets from train and test sets
-        X_test = data_test.drop(columns=[analysis_config["data_info"]["target_column"]])
-        y_test = data_test[analysis_config["data_info"]["target_column"]]
+        X_test = data_test.drop(columns=label_col)
+        y_test = data_test[label_col]
 
         return X_train, y_train, X_test, y_test
 
-    def prepare_model(self, analysis_config: dict) -> None:
+    def prepare_model(self, analysis_config: dict) -> object:
 
-        model = self.deep_learning_backend.create_model(
+        model = self.analysis_backend.create_model(
             analysis_config["train"]["model"]["type"],
-            analysis_config["train"]["model"]["parameters"]["layers"],
+            analysis_config["train"]["model"]["parameters"],
         )
-
-        model = self.deep_learning_backend.compile_model(
-            model,
-            analysis_config["train"]["model"]["parameters"]["compiler"],
-        )
+        if isinstance(self.analysis_backend, DeepLearningBackend):
+            log(INFO, "Using DeepLearningBackend to create the model.")
+            model = self.analysis_backend.compile_model(
+                model,
+                analysis_config["train"]["model"]["compiler"],
+            )
 
         return model
 
@@ -136,7 +142,7 @@ class FlowerClientTrain(NumPyClient):
 
             model, X_train, y_train, X_test, y_test, analysis_config = self.load_temp()
 
-        model.set_weights(parameters)
+        model = set_model_parameters(model, parameters)
 
         log(
             INFO,
@@ -146,8 +152,9 @@ class FlowerClientTrain(NumPyClient):
             INFO,
             f'{analysis_config["train"]["training"]["batch_size"] = }',
         )
+        log(INFO, f"{self.analysis_backend = }")
 
-        model = self.deep_learning_backend.train_model(
+        model = self.analysis_backend.train_model(
             model,
             X_train,
             y_train,
@@ -163,8 +170,12 @@ class FlowerClientTrain(NumPyClient):
 
         model, _, _, X_test, y_test, _ = self.load_temp()
 
-        model.set_weights(parameters)
+        model = set_model_parameters(model, parameters)
 
-        loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+        log(INFO, f"{self.analysis_backend = }")
 
-        return loss, len(X_test), {"accuracy": accuracy}
+        test_prediction = self.analysis_backend.predict(model, X_test)
+
+        test_validation = self.analysis_backend.validate(y_test, test_prediction)
+
+        return 0.0, len(X_test), test_validation
