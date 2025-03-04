@@ -6,16 +6,9 @@ from flwr.common import Context
 from flwr.common.logger import log
 
 warnings.filterwarnings("ignore", category=UserWarning)
-
-from analysis_backend.deep_learning_backend.deep_learning_backend import (
-    DeepLearningBackend,
-)
-from analysis_backend.machine_learning_backend.machine_learning_backend import (
-    MachineLearningBackend,
-)
 from analysis_backend.statistic_backend.statistic_backend import StatisticBackend
 from client import FlowerClientStatistic, FlowerClientTrain
-from task import load_config, load_data
+from task import load_data
 
 
 def client_fn(context: Context):
@@ -36,19 +29,10 @@ def client_fn(context: Context):
 
     elif context.run_config["use-case"] == "train":
 
-        if context.run_config["backend"] == "deep learning":
-            analysis_backend = DeepLearningBackend()
-        elif context.run_config["backend"] == "machine learning":
-            analysis_backend = MachineLearningBackend()
-        else:
-            raise ValueError(
-                f'Unknown analysis backend: {context.run_config["backend"]}'
-            )
-
         print("\n\n")
         log(INFO, f"Start Flower Client Train")
         # Return Client instance
-        return FlowerClientTrain(analysis_backend, data).to_client()
+        return FlowerClientTrain(data).to_client()
 
     else:
         raise ValueError(f'Unknown Flower use case: {context.run_config["use-case"]}')

@@ -69,30 +69,12 @@ def server_fn(context: Context) -> ServerAppComponents:
 
     elif context.run_config["use-case"] == "train":
 
-        analysis_config = load_config()
-
-        if context.run_config["backend"] == "deep learning":
-            analysis_backend = DeepLearningBackend()
-        elif context.run_config["backend"] == "machine learning":
-            analysis_backend = MachineLearningBackend()
-        else:
-            raise ValueError(
-                f'Unknown analysis backend: {context.run_config["backend"]}'
-            )
-
-        model = analysis_backend.create_model(
-            analysis_config["train"]["model"]["type"],
-            analysis_config["train"]["model"]["parameters"],
-        )
-
-        parameters = get_model_parameters(model)
-
         # Define strategy
         strategy = strategy = AggregateCustomMetricStrategy(
             fraction_fit=1.0,
             fraction_evaluate=1.0,
             min_available_clients=2,
-            initial_parameters=parameters,
+            # initial_parameters=parameters,
             evaluate_metrics_aggregation_fn=weighted_average,
             on_fit_config_fn=fit_config,
             on_evaluate_config_fn=evaluate_config,

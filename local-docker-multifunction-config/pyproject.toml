@@ -27,11 +27,9 @@ serverapp = "src.flower_multifunction.server_app:app"
 clientapp = "src.flower_multifunction.client_app:app"
 
 [tool.flwr.app.config]
-backend = "deep learning"
 use-case = "train" # "statistic" # 
 num-server-rounds = 4
 fraction-sample = 1.0
-config-file = "config.yaml"
 
 [tool.flwr.federations]
 default = "local-simulation"

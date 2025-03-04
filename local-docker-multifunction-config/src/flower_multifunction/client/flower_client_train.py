@@ -15,38 +15,43 @@ from analysis_backend.machine_learning_backend.machine_learning_backend import (
 from flwr.client import NumPyClient
 from flwr.common import Parameters
 from flwr.common.logger import log
-from task import set_model_parameters
+from task import set_model_parameters, set_initial_params, get_num_classes, get_model_parameters
 
 
 class FlowerClientTrain(NumPyClient):
     def __init__(
         self,
-        analysis_backend: Union[DeepLearningBackend, MachineLearningBackend],
         data: pd.DataFrame,
     ) -> None:
-        self.analysis_backend = analysis_backend
         self.data = data
 
         self.temp_dir = os.path.join(os.getcwd(), "temp")
+        self.analysis_backend_path = os.path.join(self.temp_dir, "analysis_backend.pkl")
         self.model_path = os.path.join(self.temp_dir, "model.pkl")
         self.data_path = os.path.join(self.temp_dir, "data.pkl")
         self.config_path = os.path.join(self.temp_dir, "config.json")
 
-    def prepare_data(
-        self, analysis_config: dict
-    ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+        self.analysis_backend: Optional[Union[DeepLearningBackend, MachineLearningBackend]] = None
+        self.model: Optional[object] = None
+        self.analysis_config: Optional[dict] = None
+        self.X_train: Optional[pd.DataFrame] = None
+        self.y_train: Optional[pd.Series] = None
+        self.X_test: Optional[pd.DataFrame] = None
+        self.y_test: Optional[pd.Series] = None
+
+    def prepare_data(self) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
 
         indexes = self.analysis_backend.get_split_indexes(
             self.data,
-            analysis_config["data_info"]["target_column"],
-            split_strategy=analysis_config["train"]["split_strategie"]["name"],
-            split_parameter=analysis_config["train"]["split_strategie"]["parameters"],
+            self.analysis_config["data_info"]["target_column"],
+            split_strategy=self.analysis_config["train"]["split_strategie"]["name"],
+            split_parameter=self.analysis_config["train"]["split_strategie"]["parameters"],
         )
 
         data, label_col = self.analysis_backend.label_encoding(
             self.data,
-            analysis_config["data_info"]["target_column"],
-            encoding=analysis_config["data_info"]["encoding"],
+            self.analysis_config["data_info"]["target_column"],
+            encoding=self.analysis_config["data_info"]["encoding"],
         )
 
         data_train = data.iloc[indexes[0]["train"]]
@@ -61,121 +66,117 @@ class FlowerClientTrain(NumPyClient):
 
         return X_train, y_train, X_test, y_test
 
-    def prepare_model(self, analysis_config: dict) -> object:
+    def prepare_model(self) -> object:
 
         model = self.analysis_backend.create_model(
-            analysis_config["train"]["model"]["type"],
-            analysis_config["train"]["model"]["parameters"],
+            self.analysis_config["train"]["model"]["type"],
+            self.analysis_config["train"]["model"]["parameters"],
         )
         if isinstance(self.analysis_backend, DeepLearningBackend):
             log(INFO, "Using DeepLearningBackend to create the model.")
             model = self.analysis_backend.compile_model(
                 model,
-                analysis_config["train"]["model"]["compiler"],
+                self.analysis_config["train"]["model"]["compiler"],
             )
+        elif isinstance(self.analysis_backend, MachineLearningBackend):
+            set_initial_params(model, get_num_classes(self.y_train), self.X_train.shape[1])
 
         return model
 
     def save_temp(
-        self,
-        model: object,
-        X_train: pd.DataFrame,
-        y_train: pd.Series,
-        X_test: pd.DataFrame,
-        y_test: pd.Series,
-        analysis_config: dict,
+        self
     ) -> None:
         """Save model, data and config temporarily and delete old files"""
         os.makedirs(self.temp_dir, exist_ok=True)
 
-        for path in [self.model_path, self.data_path, self.config_path]:
+        for path in [self.analysis_backend_path, self.model_path, self.data_path, self.config_path]:
             if os.path.exists(path):
                 os.remove(path)
 
+        with open(self.analysis_backend_path, "wb") as f:
+            pickle.dump(self.analysis_backend, f)
+
         with open(self.model_path, "wb") as f:
-            pickle.dump(model, f)
+            pickle.dump(self.model, f)
 
         with open(self.data_path, "wb") as f:
-            pickle.dump((X_train, y_train, X_test, y_test), f)
+            pickle.dump((self.X_train, self.y_train, self.X_test, self.y_test), f)
 
         with open(self.config_path, "w") as f:
-            json.dump(analysis_config, f)
+            json.dump(self.analysis_config, f)
 
     def load_temp(
         self,
-    ) -> Tuple[
-        Optional[object],
-        Optional[pd.DataFrame],
-        Optional[pd.Series],
-        Optional[pd.DataFrame],
-        Optional[pd.Series],
-        Optional[dict],
-    ]:
+    ) -> None:
         """Load model, data and config"""
         if (
-            os.path.exists(self.model_path)
+            os.path.exists(self.analysis_backend_path)
+            and os.path.exists(self.model_path)
             and os.path.exists(self.data_path)
             and os.path.exists(self.config_path)
         ):
+            with open(self.analysis_backend_path, "rb") as f:
+                self.analysis_backend = pickle.load(f)
+
             with open(self.model_path, "rb") as f:
-                model = pickle.load(f)
+                self.model = pickle.load(f)
 
             with open(self.data_path, "rb") as f:
-                X_train, y_train, X_test, y_test = pickle.load(f)
+                self.X_train, self.y_train, self.X_test, self.y_test = pickle.load(f)
 
             with open(self.config_path, "r") as f:
-                analysis_config = json.load(f)
-
-            return model, X_train, y_train, X_test, y_test, analysis_config
-        return None, None, None, None, None, None
+                self.analysis_config = json.load(f)
 
     def fit(self, parameters: Parameters, config: dict) -> tuple[float, int, dict]:
 
         if config["current_round"] == 1:
-            analysis_config = json.loads(config["config_json"])
-            X_train, y_train, X_test, y_test = self.prepare_data(analysis_config)
-            model = self.prepare_model(analysis_config)
+            self.analysis_config = json.loads(config["config_json"])
 
-            self.save_temp(model, X_train, y_train, X_test, y_test, analysis_config)
+            log(INFO, f'{self.analysis_config["backend"] = }')
+
+            if self.analysis_config["backend"] == "deep learning":
+                self.analysis_backend = DeepLearningBackend()
+            elif self.analysis_config["backend"] == "machine learning":
+                self.analysis_backend = MachineLearningBackend()
+            else:
+                raise ValueError(
+                    f'Unknown analysis backend: {self.analysis_config["backend"]}'
+                )
+            self.X_train, self.y_train, self.X_test, self.y_test = self.prepare_data()
+            self.model = self.prepare_model()
+            parameters = get_model_parameters(self.model)
+
+            self.save_temp()
+            
 
         else:
 
-            model, X_train, y_train, X_test, y_test, analysis_config = self.load_temp()
+            self.load_temp()
 
-        model = set_model_parameters(model, parameters)
+        self.model = set_model_parameters(self.model, parameters)
 
-        log(
-            INFO,
-            f'{analysis_config["train"]["training"]["epochs"] = }',
-        )
-        log(
-            INFO,
-            f'{analysis_config["train"]["training"]["batch_size"] = }',
-        )
-        log(INFO, f"{self.analysis_backend = }")
-
-        model = self.analysis_backend.train_model(
-            model,
-            X_train,
-            y_train,
-            analysis_config["train"]["training"],
+        self.model = self.analysis_backend.train_model(
+            self.model,
+            self.X_train,
+            self.y_train,
+            self.analysis_config["train"]["training"],
         )
 
-        return model.get_weights(), len(X_train), {}
+        return get_model_parameters(self.model), len(self.X_train), {}
 
     def evaluate(self, parameters: Parameters, config: dict) -> tuple[float, int, dict]:
 
         log(INFO, "Evaluating model...")
         log(INFO, f"{config['current_round'] = }")
 
-        model, _, _, X_test, y_test, _ = self.load_temp()
+        self.load_temp()
 
-        model = set_model_parameters(model, parameters)
+        self.model = set_model_parameters(self.model, parameters)
 
         log(INFO, f"{self.analysis_backend = }")
 
-        test_prediction = self.analysis_backend.predict(model, X_test)
+        test_prediction = self.analysis_backend.predict(self.model, self.X_test)
 
-        test_validation = self.analysis_backend.validate(y_test, test_prediction)
+        test_validation = self.analysis_backend.validate(self.y_test, test_prediction)
 
-        return 0.0, len(X_test), test_validation
+        return 0.0, len(self.X_test), test_validation

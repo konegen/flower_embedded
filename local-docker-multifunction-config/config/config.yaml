@@ -1,3 +1,5 @@
+backend: machine learning
+
 data_info:
   encoding: integer
   target_column: Species
@@ -9,34 +11,43 @@ train:
       test_size: 0.2
       shuffle: true
   
-  model:
-    type: mlp
-    parameters:
-      - type: Input
-        shape: [4]
-      - type: Dense
-        units: 10
-        activation: relu
-      - type: Dense
-        units: 10
-        activation: relu
-      - type: Dense
-        units: 3
-        activation: softmax
-    compiler:
-      optimizer:
-        class_name: Adam
-        config:
-          learning_rate: 0.001
-      loss: sparse_categorical_crossentropy
-      metrics:
-        - accuracy
+  # model:
+  #   type: mlp
+  #   parameters:
+  #     - type: Input
+  #       shape: [4]
+  #     - type: Dense
+  #       units: 10
+  #       activation: relu
+  #     - type: Dense
+  #       units: 10
+  #       activation: relu
+  #     - type: Dense
+  #       units: 3
+  #       activation: softmax
+  #   compiler:
+  #     optimizer:
+  #       class_name: Adam
+  #       config:
+  #         learning_rate: 0.01
+  #     loss: sparse_categorical_crossentropy
+  #     metrics:
+  #       - accuracy
 
-  training:
-    epochs: 5
-    batch_size: 2
-    validation_split: 0.2
-    verbose: 0
+  # training:
+  #   epochs: 5
+  #   batch_size: 2
+  #   validation_split: 0.25
+  #   verbose: 0
+
+  model:
+    type: logistic_regression
+    parameters: 
+      penalty: l2
+      tol: 0.0001
+      C: 1.0
+
+  training: {}
 
 statistic:
   mean:

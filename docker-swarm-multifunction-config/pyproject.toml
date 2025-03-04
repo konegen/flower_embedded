@@ -28,7 +28,7 @@ clientapp = "src.flower_multifunction.client_app:app"
 
 [tool.flwr.app.config]
 use-case = "train" # "statistic" # 
-num-server-rounds = 2
+num-server-rounds = 4
 fraction-sample = 1.0
 
 [tool.flwr.federations]

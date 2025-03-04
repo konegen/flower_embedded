@@ -62,6 +62,29 @@ services:
         constraints:
           - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
 
+  supernode-3:
+    image: flwr/supernode:1.14.0
+    command:
+      - --insecure
+      - --superlink
+      - superlink:9092
+      - --node-config
+      - "dataset-path='datasets/iris_data_part_3/data.csv'"
+      - --clientappio-api-address
+      - 0.0.0.0:9096
+      - --isolation
+      - process
+    ports:
+      - 9096:9096
+    networks:
+      - flwr-overlay-network
+    depends_on:
+      - superlink
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == orin  # Auf orin ausführen
+
   serverapp:
     image: harbor.dev-hs.de/hand/flwr_serverapp_analysis_config
     volumes:
@@ -112,6 +135,23 @@ services:
       placement:
         constraints:
           - node.hostname == worker-node-2  # Auf worker-node-2 ausführen
+  
+  clientapp-3:
+    image: harbor.dev-hs.de/hand/flwr_clientapp_analysis_config
+    volumes:
+      - /home/orin/datasets:/app/datasets
+    command:                         
+      - --insecure
+      - --clientappio-api-address
+      - supernode-3:9096
+    networks:
+      - flwr-overlay-network
+    depends_on:
+      - supernode-3
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == orin  # Auf orin ausführen
 
 networks:
   flwr-overlay-network:
